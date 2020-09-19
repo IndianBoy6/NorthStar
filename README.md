@@ -20,11 +20,9 @@ After installing and running NorthStar, you should see a relatively simple GUI. 
 As a programmer on my FTC team, I've realized FTC programming can be a lot of tedious work. In autonomous mode, specifically, a lot of the time is spent measuring distances, converting them to the right unit, and slowly filling them into your program. [RoadRunner](https://github.com/acmerobotics/road-runner), a motion planning library created by ACME Robotics, has a program to convert paths you create using their GUI into programs. However, it only supports RoadRunner, making it hard for teams not using RoadRunner to integrate this. My goal is to make it easier for any team to create autonomous programs with minimal overhead.
 
 ## Installation
+If you want to run this locally, clone this repository. To run, open index.html. The only files you will actually need are `index.html` and `build/build.js` so downloading those seperately will work. However, if you do so, you will not be able to recompile the typescript files.
 
-
-```
-Add Later
-```
+Alternatively, you can go to https://nikhilanayak.github.io/NorthStar where the latest code will be running.
 
 ## Configuration
 To convert your trajectory into java file, you'll need a `config.json` file. Use this example to create your own `config.json`
@@ -38,6 +36,12 @@ To convert your trajectory into java file, you'll need a `config.json` file. Use
 }
 
 ```
+If you want to create your own `config.json` from scratch, this is what each JSON value means:
+- Imports: The imports are any libraries that need to be imported for the code to run properly. If you're not sure what needs to be imported, leave this blank and use your IDE to automatically import things later as needed
+- Declarations: This is everything that needs to be declared after the class declaration and before the runOpMode method
+- Inits: This is everything that needs to be initialized inside the runOpMode method but before waitForStart is called
+- blockingMovement: If this is true, the main loop in unnecessary as all the movement code can be placed one after another. Right now, non-blockingMovement is not supported.
+
 
 
 ## User Interface
