@@ -1,4 +1,4 @@
-interface Translation{
+interface Translation{// Translation, unlike rotation, is global, not relative
     x: number,
     y: number
 }

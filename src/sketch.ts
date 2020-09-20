@@ -1,20 +1,20 @@
-
-
-const blockSize = 600;
+let blockSize: number;// the size(in pixels) of each inch
 
 
 let robot: Robot;
 
-let loadFile: any;
+let loadFile: any;// the object used to load file from the client's file system
 function setup() {
+	blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
+
 
 	document.addEventListener("keydown", keypressed);
 	createCanvas(blockSize, blockSize);
-	document.body.appendChild(document.createElement("br"));//document go brrrr
+	document.body.appendChild(document.createElement("br"));
 
 	robot = new Robot(blockSize);
 
-	const setConfig = button("Set Config File", () => {
+	const setConfigButton = button("Set Config File", () => {
 		loadFile = document.createElement("input");
 		loadFile.type = "file";
 		loadFile.click();
@@ -47,7 +47,10 @@ function setup() {
 		if (loadFile.files.length > 0) {
 			const fileReader = new FileReader();
 			fileReader.onload = function (e) {
-				exportToCode(JSON.parse(e.target.result.toString()), robot.path);
+				const code = exportToCode(JSON.parse(e.target.result.toString()), robot.path);
+				let fileName = prompt("What should the name of this file be?");
+				downloadCode(code.join("\n"), fileName);
+
 			};
 			fileReader.readAsText(loadFile.files[0]);
 		}
@@ -59,7 +62,6 @@ function setup() {
 	});
 
 
-
 	stepForwardPlayback.style.display = "none";
 	stepBackwardPlayback.style.display = "none";
 	endPlayback.style.display = "none";
@@ -67,6 +69,19 @@ function setup() {
 	loadFile = document.createElement("input");
 	loadFile.style.display = "none";
 	loadFile.type = "file";
+
+	
+	setConfigButton.style.width = "30%";
+	playbackButton.style.width = "30%";
+	exportButton.style.width = "30%";
+
+	window.onresize = () => {
+		blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
+		resizeCanvas(blockSize, blockSize);
+		robot.setBlockSize(blockSize);
+
+	};
+
 
 }
 function draw() {
@@ -109,11 +124,11 @@ function keypressed(e: KeyboardEvent) {
 }
 
 
-function downloadObjectAsJson(exportObj: any, exportName: string) {
-	const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+function downloadCode(code: any, exportName: string) {
+	const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(code);
 	const downloadAnchorNode = document.createElement("a");
 	downloadAnchorNode.setAttribute("href", dataStr);
-	downloadAnchorNode.setAttribute("download", exportName + ".json");
+	downloadAnchorNode.setAttribute("download", exportName);
 	document.body.appendChild(downloadAnchorNode); // required for firefox
 	downloadAnchorNode.click();
 	downloadAnchorNode.remove();
@@ -124,7 +139,7 @@ function button(html: string, onpress: any) {
 	const button = document.createElement("button");
 	button.innerHTML = html;
 	button.addEventListener("click", onpress);
-
+	button.style.position = "relative";
 	document.body.appendChild(button);
 	return button;
 
@@ -171,16 +186,34 @@ function exportToCode(config: any, points: Array<p5.Vector>) {
 	code.push("package YOUR_PACKAGE;");
 	code = code.concat(imports.split("\n"));
 	code.push("@Autonomous");
-	code.push("public class CLASSNAME extends LinearOpMode");
+	code.push("public class CLASSNAME extends LinearOpMode{");
+
+	if (!blockingMovement) {
+		let enumString: Array<string> = [];
+		enumString.push("enum State{");
+		for (let i = 1; i < points.length; i++) {
+			let currentKey = "Point" + i;
+			enumString.push(currentKey + ",");
+		}
+		enumString.push("Done");
+		enumString.push("}");
+
+		code = code.concat(enumString);
+	}
 
 	code = code.concat(declarations.split("\n"));
 
 	code.push("@Override");
 	code.push("public void runOpMode(){");
+
+	if (!blockingMovement) {
+		code.push("State currentState = State.Point0;");
+	}
+
 	code = code.concat(initializations.split("\n"));
 	code.push("waitForStart();");
 
-	if (blockingMovement) {
+	if (blockingMovement) {// if movement is blocking, we can just add move functions one after another
 		for (const rawPoint of points.slice(1)) {
 			const point = createVector(rawPoint.x - robot.positionOffset.x, rawPoint.y - robot.positionOffset.y);
 			let output = movementFunction + "";
@@ -189,15 +222,46 @@ function exportToCode(config: any, points: Array<p5.Vector>) {
 			code.push(output);
 		}
 	}
-	else {
-		console.log("Sorry, nonblocking movement is not currently supported");
+	else {// if movement is not blocking, we have to use a state machine to maintain state.
+		let replacedMovementFunction = movementFunction;
+
+		code.push("while(opModeIsActive()){");
+
+
+		code.push("switch(currentState){");
+		for (let i = 1; i < points.length; i++) {
+			let point: p5.Vector = createVector(points[i].x, points[i].y);
+			point.x -= robot.positionOffset.x;
+			point.y -= robot.positionOffset.y;
+			let formattedMovementFunction = movementFunction;
+			formattedMovementFunction = formattedMovementFunction.split("$x").join(point.x.toString());
+			formattedMovementFunction = formattedMovementFunction.split("$y").join(point.y.toString());
+
+			code.push("case Point" + i + ":");
+
+			code.push("if(" + formattedMovementFunction + ") {");
+			if (i == points.length - 1) {
+				code.push("currentState = State.Done;");
+			}
+			else {
+				let nextIdx = i + 1;
+				console.log(nextIdx);
+				code.push("currentState = State.Point" + nextIdx + ";");
+			}
+			code.push("}");
+
+			code.push("break;");
+			// iterate to doneState
+		}
+		code.push("}");
+
+		code.push("}");
 	}
 
 	code.push("}");
 	code.push("}");
 
 
-	console.log(code);
 	return code;
 
 

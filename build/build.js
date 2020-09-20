@@ -10,6 +10,9 @@ class Robot {
         this.oldPos = createVector(0, 0);
         this.positionOffset = undefined;
     }
+    setBlockSize(newBlockSize) {
+        this.blockSize = newBlockSize;
+    }
     show() {
         strokeWeight(1);
         rectMode(CENTER);
@@ -107,15 +110,16 @@ class Robot {
         this.position = this.path[this.trajectoryStep];
     }
 }
-const blockSize = 600;
+let blockSize;
 let robot;
 let loadFile;
 function setup() {
+    blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
     document.addEventListener("keydown", keypressed);
     createCanvas(blockSize, blockSize);
     document.body.appendChild(document.createElement("br"));
     robot = new Robot(blockSize);
-    const setConfig = button("Set Config File", () => {
+    const setConfigButton = button("Set Config File", () => {
         loadFile = document.createElement("input");
         loadFile.type = "file";
         loadFile.click();
@@ -142,7 +146,9 @@ function setup() {
         if (loadFile.files.length > 0) {
             const fileReader = new FileReader();
             fileReader.onload = function (e) {
-                exportToCode(JSON.parse(e.target.result.toString()), robot.path);
+                const code = exportToCode(JSON.parse(e.target.result.toString()), robot.path);
+                let fileName = prompt("What should the name of this file be?");
+                downloadCode(code.join("\n"), fileName);
             };
             fileReader.readAsText(loadFile.files[0]);
         }
@@ -156,6 +162,14 @@ function setup() {
     loadFile = document.createElement("input");
     loadFile.style.display = "none";
     loadFile.type = "file";
+    setConfigButton.style.width = "30%";
+    playbackButton.style.width = "30%";
+    exportButton.style.width = "30%";
+    window.onresize = () => {
+        blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
+        resizeCanvas(blockSize, blockSize);
+        robot.setBlockSize(blockSize);
+    };
 }
 function draw() {
     background(200);
@@ -182,11 +196,11 @@ function keypressed(e) {
         robot.moveTo(robot.screenToPos(mouseX), robot.screenToPos(mouseY));
     }
 }
-function downloadObjectAsJson(exportObj, exportName) {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+function downloadCode(code, exportName) {
+    const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(code);
     const downloadAnchorNode = document.createElement("a");
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", exportName + ".json");
+    downloadAnchorNode.setAttribute("download", exportName);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -195,6 +209,7 @@ function button(html, onpress) {
     const button = document.createElement("button");
     button.innerHTML = html;
     button.addEventListener("click", onpress);
+    button.style.position = "relative";
     document.body.appendChild(button);
     return button;
 }
@@ -234,10 +249,24 @@ function exportToCode(config, points) {
     code.push("package YOUR_PACKAGE;");
     code = code.concat(imports.split("\n"));
     code.push("@Autonomous");
-    code.push("public class CLASSNAME extends LinearOpMode");
+    code.push("public class CLASSNAME extends LinearOpMode{");
+    if (!blockingMovement) {
+        let enumString = [];
+        enumString.push("enum State{");
+        for (let i = 1; i < points.length; i++) {
+            let currentKey = "Point" + i;
+            enumString.push(currentKey + ",");
+        }
+        enumString.push("Done");
+        enumString.push("}");
+        code = code.concat(enumString);
+    }
     code = code.concat(declarations.split("\n"));
     code.push("@Override");
     code.push("public void runOpMode(){");
+    if (!blockingMovement) {
+        code.push("State currentState = State.Point0;");
+    }
     code = code.concat(initializations.split("\n"));
     code.push("waitForStart();");
     if (blockingMovement) {
@@ -250,11 +279,34 @@ function exportToCode(config, points) {
         }
     }
     else {
-        console.log("Sorry, nonblocking movement is not currently supported");
+        let replacedMovementFunction = movementFunction;
+        code.push("while(opModeIsActive()){");
+        code.push("switch(currentState){");
+        for (let i = 1; i < points.length; i++) {
+            let point = createVector(points[i].x, points[i].y);
+            point.x -= robot.positionOffset.x;
+            point.y -= robot.positionOffset.y;
+            let formattedMovementFunction = movementFunction;
+            formattedMovementFunction = formattedMovementFunction.split("$x").join(point.x.toString());
+            formattedMovementFunction = formattedMovementFunction.split("$y").join(point.y.toString());
+            code.push("case Point" + i + ":");
+            code.push("if(" + formattedMovementFunction + ") {");
+            if (i == points.length - 1) {
+                code.push("currentState = State.Done;");
+            }
+            else {
+                let nextIdx = i + 1;
+                console.log(nextIdx);
+                code.push("currentState = State.Point" + nextIdx + ";");
+            }
+            code.push("}");
+            code.push("break;");
+        }
+        code.push("}");
+        code.push("}");
     }
     code.push("}");
     code.push("}");
-    console.log(code);
     return code;
 }
 //# sourceMappingURL=../src/src/build.js.map

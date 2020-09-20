@@ -27,6 +27,10 @@ class Robot {
 		this.positionOffset = undefined;
 	}
 
+	setBlockSize(newBlockSize: number){
+		this.blockSize = newBlockSize;
+	}
+
 	show() {
 		strokeWeight(1);
 		rectMode(CENTER);

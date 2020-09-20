@@ -37,10 +37,10 @@ To convert your trajectory into java file, you'll need a `config.json` file. Use
 
 ```
 If you want to create your own `config.json` from scratch, this is what each JSON value means:
-- Imports: The imports are any libraries that need to be imported for the code to run properly. If you're not sure what needs to be imported, leave this blank and use your IDE to automatically import things later as needed
-- Declarations: This is everything that needs to be declared after the class declaration and before the runOpMode method
-- Inits: This is everything that needs to be initialized inside the runOpMode method but before waitForStart is called
-- blockingMovement: If this is true, the main loop in unnecessary as all the movement code can be placed one after another. Right now, non-blockingMovement is not supported.
+- `Imports`: The imports are any libraries that need to be imported for the code to run properly. If you're not sure what needs to be imported, leave this blank and use your IDE to automatically import things later as needed
+- `Declarations`: This is everything that needs to be declared after the class declaration and before the runOpMode method
+- `Inits`: This is everything that needs to be initialized inside the runOpMode method but before waitForStart is called
+- `BlockingMovement`: If this is true, the main loop in unnecessary as all the movement code can be placed one after another. If blockingMovement is false, you will need to your movementfunction to return a boolean, signifying whether it has completed it's path or not. 
 
 
 
