@@ -71,9 +71,9 @@ function setup() {
 	loadFile.type = "file";
 
 	
-	setConfigButton.style.width = "30%";
-	playbackButton.style.width = "30%";
-	exportButton.style.width = "30%";
+	setConfigButton.style.width = (blockSize/3).toString();
+	playbackButton.style.width = (blockSize/3).toString();
+	exportButton.style.width = (blockSize/3).toString();
 
 	window.onresize = () => {
 		blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
