@@ -162,13 +162,16 @@ function setup() {
     loadFile = document.createElement("input");
     loadFile.style.display = "none";
     loadFile.type = "file";
-    setConfigButton.style.width = "30%";
-    playbackButton.style.width = "30%";
-    exportButton.style.width = "30%";
+    setConfigButton.style.width = (blockSize / 3).toString();
+    playbackButton.style.width = (blockSize / 3).toString();
+    exportButton.style.width = (blockSize / 3).toString();
     window.onresize = () => {
         blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
         resizeCanvas(blockSize, blockSize);
         robot.setBlockSize(blockSize);
+        setConfigButton.style.width = (blockSize / 3).toString();
+        playbackButton.style.width = (blockSize / 3).toString();
+        exportButton.style.width = (blockSize / 3).toString();
     };
 }
 function draw() {
@@ -209,7 +212,6 @@ function button(html, onpress) {
     const button = document.createElement("button");
     button.innerHTML = html;
     button.addEventListener("click", onpress);
-    button.style.position = "relative";
     document.body.appendChild(button);
     return button;
 }

@@ -3,7 +3,7 @@ let blockSize: number;// the size(in pixels) of each inch
 
 let robot: Robot;
 
-let loadFile: any;// the object used to load file from the client's file system
+let loadFile: any;// the object used to load filee from the client's file system
 function setup() {
 	blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
 
@@ -39,7 +39,7 @@ function setup() {
 
 	});
 
-	loadFile = document.createElement("input");
+	loadFile = <HTMLInputElement>document.createElement("input");
 	loadFile.display = "none";
 	loadFile.type = "file";
 
@@ -70,21 +70,25 @@ function setup() {
 	loadFile.style.display = "none";
 	loadFile.type = "file";
 
-	
-	setConfigButton.style.width = (blockSize/3).toString();
-	playbackButton.style.width = (blockSize/3).toString();
-	exportButton.style.width = (blockSize/3).toString();
+
+	setConfigButton.style.width = (blockSize / 3).toString();
+	playbackButton.style.width = (blockSize / 3).toString();
+	exportButton.style.width = (blockSize / 3).toString();
 
 	window.onresize = () => {
 		blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
 		resizeCanvas(blockSize, blockSize);
 		robot.setBlockSize(blockSize);
 
+		setConfigButton.style.width = (blockSize / 3).toString();
+		playbackButton.style.width = (blockSize / 3).toString();
+		exportButton.style.width = (blockSize / 3).toString();
+
 	};
 
 
 }
-function draw() {
+function draw(): void {
 	background(200);
 
 	fill(0, 0, 0);
@@ -95,7 +99,7 @@ function draw() {
 }
 
 
-function keypressed(e: KeyboardEvent) {
+function keypressed(e: KeyboardEvent): void {
 	if (e.key == "w") {
 		robot.move(0, -1);
 	}
@@ -124,7 +128,7 @@ function keypressed(e: KeyboardEvent) {
 }
 
 
-function downloadCode(code: any, exportName: string) {
+function downloadCode(code: any, exportName: string): void {
 	const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(code);
 	const downloadAnchorNode = document.createElement("a");
 	downloadAnchorNode.setAttribute("href", dataStr);
@@ -135,17 +139,17 @@ function downloadCode(code: any, exportName: string) {
 }
 
 
-function button(html: string, onpress: any) {
+function button(html: string, onpress: any): HTMLElement {
 	const button = document.createElement("button");
 	button.innerHTML = html;
 	button.addEventListener("click", onpress);
-	button.style.position = "relative";
+	//button.style.position = "relative";
 	document.body.appendChild(button);
 	return button;
 
 }
 
-function exportToCode(config: any, points: Array<p5.Vector>) {
+function exportToCode(config: any, points: Array<p5.Vector>): Array<string> {
 	console.log(config);
 	let valid = true;
 

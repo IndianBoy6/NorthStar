@@ -27,11 +27,11 @@ class Robot {
 		this.positionOffset = undefined;
 	}
 
-	setBlockSize(newBlockSize: number){
+	setBlockSize(newBlockSize: number): void {
 		this.blockSize = newBlockSize;
 	}
 
-	show() {
+	show(): void {
 		strokeWeight(1);
 		rectMode(CENTER);
 		fill(120, 120, 255);
@@ -55,9 +55,9 @@ class Robot {
 				strokeWeight(2.5);
 				line(this.posToScreen(
 					this.position.x),
-				this.posToScreen(this.position.y),
-				this.posToScreen(this.path.slice(-1)[0].x),
-				this.posToScreen(this.path.slice(-1)[0].y)
+					this.posToScreen(this.position.y),
+					this.posToScreen(this.path.slice(-1)[0].x),
+					this.posToScreen(this.path.slice(-1)[0].y)
 				);
 			}
 		}
@@ -66,14 +66,14 @@ class Robot {
 
 	}
 
-	posToScreen(i: number) {
+	posToScreen(i: number): number {
 		return i * (this.blockSize / 144);
 	}
-	screenToPos(i: number) {
+	screenToPos(i: number): number {
 		return i * (144 / this.blockSize);
 	}
 
-	clipPos() {
+	clipPos(): void {
 
 		if (this.position.x > 144 - this.robotSize / 2) this.position.x = 144 - this.robotSize / 2;
 		if (this.position.x < this.robotSize / 2) this.position.x = this.robotSize / 2;
@@ -81,12 +81,12 @@ class Robot {
 		if (this.position.y < this.robotSize / 2) this.position.y = this.robotSize / 2;
 	}
 
-	move(x: number, y: number) {
+	move(x: number, y: number): void{
 		this.moveTo(this.position.x + x, this.position.y + y);
 
 	}
 
-	moveTo(x: number, y: number) {
+	moveTo(x: number, y: number): void{
 		if (!this.playingTrajectory) {
 			this.position.x = int(x);
 			this.position.y = int(y);
@@ -95,7 +95,7 @@ class Robot {
 		}
 	}
 
-	setPoint() {
+	setPoint(): void{
 		if (this.positionOffset == undefined) {
 			this.positionOffset = createVector(this.position.x, this.position.y);
 		}
@@ -111,7 +111,7 @@ class Robot {
 		}
 	}
 
-	renderTrajectory(trajectory: Array<p5.Vector>) {
+	renderTrajectory(trajectory: Array<p5.Vector>): void{
 		for (let i = 0; i < trajectory.length - 1; i++) {
 			const p1 = trajectory[i];
 			const p2 = trajectory[i + 1];
@@ -119,7 +119,7 @@ class Robot {
 		}
 	}
 
-	startTrajectory() {
+	startTrajectory(): boolean{
 		if (this.path.length > 0) {
 			this.playingTrajectory = true;
 			this.oldPos = this.position;
@@ -131,20 +131,20 @@ class Robot {
 			return false;
 		}
 	}
-	stopTrajectory() {
+	stopTrajectory(): void{
 		this.playingTrajectory = false;
 		this.trajectoryStep = 0;
 		this.position = this.oldPos;
 	}
 
-	stepTrajectoryForward() {
+	stepTrajectoryForward(): void{
 		if (this.trajectoryStep >= this.path.length - 1 || !this.playingTrajectory) {
 			return;
 		}
 		this.trajectoryStep++;
 		this.position = this.path[this.trajectoryStep];
 	}
-	stepTrajectoryBackward() {
+	stepTrajectoryBackward(): void{
 		if (this.trajectoryStep <= 0 || !this.playingTrajectory) {
 			return;
 		}
