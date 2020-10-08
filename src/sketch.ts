@@ -99,7 +99,7 @@ function setup() {
 
 	//document.body.appendChild(document.getElementById("main"));
 
-	//window.dispatchEvent(new Event("resize"));
+	window.dispatchEvent(new Event("resize"));
 }
 function draw(): void {
 	background(200);

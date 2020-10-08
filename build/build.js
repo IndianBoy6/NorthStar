@@ -191,6 +191,7 @@ function setup() {
     createCanvas(blockSize, blockSize);
     document.getElementById("main").prepend(document.getElementById("defaultCanvas0"));
     document.getElementById("main").prepend(document.getElementById("positionLabel"));
+    window.dispatchEvent(new Event("resize"));
 }
 function draw() {
     background(200);

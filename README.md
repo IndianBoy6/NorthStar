@@ -79,3 +79,6 @@ If you want to create your own `config.json` from scratch, this is what each JSO
 - Set Config File - This is Used To Set The Config File
 - Playback Trajectory - This Is Used to step through your trajectory one point at a time
 - Export Trajectory - After a Config File is set, you can export your trajectory into code.
+
+## Credit
+The starter code for P5.js integration with TypeScript was cloned from [this](https://github.com/Gaweph/p5-typescript-starter) repo.
