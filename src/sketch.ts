@@ -4,15 +4,19 @@ let blockSize: number;// the size(in pixels) of each inch
 let robot: Robot;
 
 let loadFile: any;// the object used to load filee from the client's file system
+
+var positionText: HTMLElement;
 function setup() {
 	blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
 
+	positionText = document.getElementById("positionLabel");
+
+	document.body.appendChild(positionText);
 
 	document.addEventListener("keydown", keypressed);
-	createCanvas(blockSize, blockSize);
-	document.body.appendChild(document.createElement("br"));
 
 	robot = new Robot(blockSize);
+	robot.setPositionText(positionText);
 
 	const setConfigButton = button("Set Config File", () => {
 		loadFile = document.createElement("input");
@@ -48,18 +52,20 @@ function setup() {
 			const fileReader = new FileReader();
 			fileReader.onload = function (e) {
 				const code = exportToCode(JSON.parse(e.target.result.toString()), robot.path);
-				let fileName = prompt("What should the name of this file be?");
-				downloadCode(code.join("\n"), fileName);
+				if (code != undefined) {
+					let fileName = prompt("What should the name of this file be?");
+					downloadCode(code.join("\n"), fileName);
+				}
 
 			};
 			fileReader.readAsText(loadFile.files[0]);
 		}
 		else {
-			console.log("You haven't selected a config file. Press the \"Set Config File\" Button First.");
+			showSnackbar("You have not selected a config file.<br>Press \"\Set Config File\"")
 		}
 
-
 	});
+
 
 
 	stepForwardPlayback.style.display = "none";
@@ -76,7 +82,7 @@ function setup() {
 	exportButton.style.width = (blockSize / 3).toString();
 
 	window.onresize = () => {
-		blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
+		blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.6;
 		resizeCanvas(blockSize, blockSize);
 		robot.setBlockSize(blockSize);
 
@@ -86,6 +92,12 @@ function setup() {
 
 	};
 
+	document.getElementById("main").prepend(document.createElement("br"));
+	createCanvas(blockSize, blockSize);
+	document.getElementById("main").prepend(document.getElementById("defaultCanvas0"));
+	document.getElementById("main").prepend(document.getElementById("positionLabel"));
+
+	//document.body.appendChild(document.getElementById("main"));
 
 }
 function draw(): void {
@@ -144,58 +156,73 @@ function button(html: string, onpress: any): HTMLElement {
 	button.innerHTML = html;
 	button.addEventListener("click", onpress);
 	//button.style.position = "relative";
-	document.body.appendChild(button);
+	document.getElementById("main").prepend(button);
 	return button;
 
 }
 
 function exportToCode(config: any, points: Array<p5.Vector>): Array<string> {
-	console.log(config);
+
+	if (robot.path.length == 0) {
+		showSnackbar("No path to export. Try creating some points first");
+		return;
+	}
+
 	let valid = true;
 
-	const imports: string = config["imports"];
-	const declarations: string = config["declarations"];
-	const initializations: string = config["inits"];
+	const imports: Array<string> = config["imports"];
+	const declarations: Array<string> = config["declarations"];
+	const initializations: Array<string> = config["inits"];
 	const blockingMovement: boolean = config["blockingMovement"];
 	const movementFunction: string = config["movementfunction"];
+	const additionalFunctions: Array<string> = config["additionalfunctions"];
+	const additionalClasses: Array<string> = config["additionalclasses"];
 
-	if (imports == undefined || typeof imports != "string") {
-		console.log("imports is missing or invalid");
+	if (imports == undefined || !Array.isArray(imports)) {
+		showSnackbar("Error: The imports section of your config is missing/invalid");
 		valid = false;
 	}
-	if (declarations == undefined || typeof declarations != "string") {
-		console.log("declarations is missing or invalid");
+	else if (declarations == undefined || !Array.isArray(declarations)) {
+		showSnackbar("Error: The declarations section of your config is missing/invalid");
 		valid = false;
 	}
-	if (initializations == undefined || typeof initializations != "string") {
-		console.log("initializations is missing or invalid");
+	else if (initializations == undefined || !Array.isArray(initializations)) {
+		showSnackbar("Error: The initializations section of your config is missing/invalid");
 		valid = false;
 	}
-	if (blockingMovement == undefined || typeof blockingMovement != typeof true) {
-		console.log("blockingMovement is missing or invalid");
+	else if (blockingMovement == undefined || typeof blockingMovement != typeof true) {
+		showSnackbar("Error: The blockingMovement section of your config is missing/invalid");
 		valid = false;
 	}
-	if (movementFunction == undefined || typeof movementFunction != "string" || !movementFunction.includes("$x") || !movementFunction.includes("$y")) {
-		console.log("movementFunction is missing or invalid");
+	else if (movementFunction == undefined || typeof movementFunction != "string") {
+		showSnackbar("Error: The movementFunction section of your config is missing/invalid");
 		valid = false;
 	}
+	else if (additionalFunctions == undefined || !Array.isArray(additionalFunctions)) {
+		showSnackbar("Error: The additionalFunctions section of your config is missing/invalid");
+		valid = false;
+	}
+	else if (additionalClasses == undefined || !Array.isArray(additionalClasses)) {
+		showSnackbar("Error: The additionalClasses section of your config is missing/invalid");
+		valid = false;
+	}
+
 
 	if (!valid) {
-		console.log("invalid");
 		return;
 	}
 
 	let code: Array<string> = [];
 
 	code.push("package YOUR_PACKAGE;");
-	code = code.concat(imports.split("\n"));
+	code = code.concat(imports);
 	code.push("@Autonomous");
 	code.push("public class CLASSNAME extends LinearOpMode{");
 
 	if (!blockingMovement) {
 		let enumString: Array<string> = [];
 		enumString.push("enum State{");
-		for (let i = 1; i < points.length; i++) {
+		for (let i = 0; i < points.length; i++) {
 			let currentKey = "Point" + i;
 			enumString.push(currentKey + ",");
 		}
@@ -205,25 +232,25 @@ function exportToCode(config: any, points: Array<p5.Vector>): Array<string> {
 		code = code.concat(enumString);
 	}
 
-	code = code.concat(declarations.split("\n"));
+	code = code.concat(declarations);
 
 	code.push("@Override");
 	code.push("public void runOpMode(){");
 
 	if (!blockingMovement) {
-		code.push("State currentState = State.Point0;");
+		code.push("State currentState = State.Point1;");
 	}
 
-	code = code.concat(initializations.split("\n"));
+	code = code.concat(initializations);
 	code.push("waitForStart();");
 
 	if (blockingMovement) {// if movement is blocking, we can just add move functions one after another
 		for (const rawPoint of points.slice(1)) {
 			const point = createVector(rawPoint.x - robot.positionOffset.x, rawPoint.y - robot.positionOffset.y);
-			let output = movementFunction + "";
-			output = output.split("$x").join(point.x.toString());
-			output = output.split("$y").join(point.y.toString());
-			code.push(output);
+			let evaluatedMovementFunction = movementFunction + "";
+			evaluatedMovementFunction = evaluatedMovementFunction.split("$x").join(point.x.toString());
+			evaluatedMovementFunction = evaluatedMovementFunction.split("$y").join(point.y.toString());
+			code.push(evaluatedMovementFunction + ";");
 		}
 	}
 	else {// if movement is not blocking, we have to use a state machine to maintain state.
@@ -249,7 +276,6 @@ function exportToCode(config: any, points: Array<p5.Vector>): Array<string> {
 			}
 			else {
 				let nextIdx = i + 1;
-				console.log(nextIdx);
 				code.push("currentState = State.Point" + nextIdx + ";");
 			}
 			code.push("}");
@@ -263,12 +289,18 @@ function exportToCode(config: any, points: Array<p5.Vector>): Array<string> {
 	}
 
 	code.push("}");
+	code = code.concat(additionalFunctions);
 	code.push("}");
-
+	code = code.concat(additionalClasses);
 
 	return code;
 
 
 }
 
-
+function showSnackbar(text: string) {
+	let snackbar = document.getElementById("snackbar");
+	snackbar.className = "show";
+	snackbar.innerHTML = text;
+	setTimeout(() => { snackbar.className = "" }, 6000);
+}

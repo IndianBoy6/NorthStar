@@ -1,24 +1,113 @@
 <html>
-  <head>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.0.0/p5.min.js"
-      integrity="sha256-Pg1di+fBF53Rbh9oZR/FeD1xsFzTLC963lcac1D0ias="
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.0.0/addons/p5.sound.min.js"
-      integrity="sha256-UySade9ZHGHdcdkTGEpftp/ZZbn9HYCe53RkvVFm9sM="
-      crossorigin="anonymous"
-    ></script>
 
-    <script src="build/build.js"></script>
+<head>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Spartan">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<style>
+		.title {
+			font-family: "Spartan";
+			font-size: 50px;
 
-    <link rel="shortcut icon" href="https://p5js.org/assets/img/favicon.ico" />
-    <link rel="icon" href="https://p5js.org/assets/img/favicon.ico" />
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+		}
 
-    </style>
-    <script></script>
-  </head>
+		#snackbar {
+			visibility: hidden;
+			min-width: 250px;
+			margin-left: -125px;
+			background-color: #888;
+			color: #fff;
+			text-align: center;
+			border-radius: 2px;
+			padding: 16px;
+			position: fixed;
+			z-index: 1;
+			left: 50%;
+			bottom: 30px;
+		}
 
-  <body></body>
+		#snackbar.show {
+			visibility: visible;
+			-webkit-animation: fadein 0.5s, fadeout 0.5s 5.5s;
+			animation: fadein 0.5s, fadeout 0.5s 5.5s;
+		}
+
+		@-webkit-keyframes fadein {
+			from {
+				bottom: 0;
+				opacity: 0;
+			}
+
+			to {
+				bottom: 30px;
+				opacity: 1;
+			}
+		}
+
+		@keyframes fadein {
+			from {
+				bottom: 0;
+				opacity: 0;
+			}
+
+			to {
+				bottom: 30px;
+				opacity: 1;
+			}
+		}
+
+		@-webkit-keyframes fadeout {
+			from {
+				bottom: 30px;
+				opacity: 1;
+			}
+
+			to {
+				bottom: 0;
+				opacity: 0;
+			}
+		}
+
+		@keyframes fadeout {
+			from {
+				bottom: 30px;
+				opacity: 1;
+			}
+
+			to {
+				bottom: 0;
+				opacity: 0;
+			}
+		}
+	</style>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.0.0/p5.min.js"
+		integrity="sha256-Pg1di+fBF53Rbh9oZR/FeD1xsFzTLC963lcac1D0ias=" crossorigin="anonymous"></script>
+
+	<script src="build/build.js"></script>
+
+	<link rel="shortcut icon" href="https://p5js.org/assets/img/favicon.ico" />
+	<link rel="icon" href="https://p5js.org/assets/img/favicon.ico" />
+
+	</style>
+	<script></script>
+</head>
+
+<body>
+	<h1 class="title">North Star</h1>
+	<div id="main">
+		<h1 id="positionLabel">0,0</h1>
+		<br>
+		<i style="font-size:100px; cursor: pointer; text-align: center;" class="fa" onclick="window.open('https://github.com/nikhilAnayak/NorthStar', '_blank')">
+			&#xf09b;
+		</i>
+	</div>
+	<div id="snackbar""></div>
+</body>
+
 </html>

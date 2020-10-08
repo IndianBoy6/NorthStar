@@ -8,8 +8,11 @@ class Robot {
 	playingTrajectory: boolean;
 	trajectoryStep: number;
 	oldPos: p5.Vector;
+	offsetSet: boolean;
 
 	positionOffset: p5.Vector;
+
+	positionText: HTMLElement;
 
 	constructor(blockSize: number) {
 		this.robotSize = 12;
@@ -24,7 +27,12 @@ class Robot {
 
 		this.oldPos = createVector(0, 0);
 
-		this.positionOffset = undefined;
+		this.positionOffset = createVector(0,0);
+		this.offsetSet = false;
+	}
+
+	setPositionText(element: HTMLElement){
+		this.positionText = element;
 	}
 
 	setBlockSize(newBlockSize: number): void {
@@ -81,23 +89,25 @@ class Robot {
 		if (this.position.y < this.robotSize / 2) this.position.y = this.robotSize / 2;
 	}
 
-	move(x: number, y: number): void{
+	move(x: number, y: number): void {
 		this.moveTo(this.position.x + x, this.position.y + y);
 
 	}
 
-	moveTo(x: number, y: number): void{
+	moveTo(x: number, y: number): void {
 		if (!this.playingTrajectory) {
 			this.position.x = int(x);
 			this.position.y = int(y);
 
 			this.clipPos();
+			this.updateText();
 		}
 	}
 
-	setPoint(): void{
-		if (this.positionOffset == undefined) {
+	setPoint(): void {
+		if (!this.offsetSet) {
 			this.positionOffset = createVector(this.position.x, this.position.y);
+			this.offsetSet = true;
 		}
 		let lastPoint = undefined;
 		if (this.path.length > 0) {
@@ -109,9 +119,15 @@ class Robot {
 		if (!(lastPoint.x == this.position.x && lastPoint.y == this.position.y)) {
 			this.path.push(createVector(this.position.x, this.position.y));
 		}
+		this.updateText();
+
 	}
 
-	renderTrajectory(trajectory: Array<p5.Vector>): void{
+	updateText(){
+		this.positionText.innerText = (this.position.x - this.positionOffset.x) + ", " + (this.position.y - this.positionOffset.y);
+	}
+
+	renderTrajectory(trajectory: Array<p5.Vector>): void {
 		for (let i = 0; i < trajectory.length - 1; i++) {
 			const p1 = trajectory[i];
 			const p2 = trajectory[i + 1];
@@ -119,7 +135,7 @@ class Robot {
 		}
 	}
 
-	startTrajectory(): boolean{
+	startTrajectory(): boolean {
 		if (this.path.length > 0) {
 			this.playingTrajectory = true;
 			this.oldPos = this.position;
@@ -127,24 +143,24 @@ class Robot {
 			return true;
 		}
 		else {
-			console.log("No path to playback. Try creating some points first");
+			showSnackbar("No path to play back. Try creating some points first.");
 			return false;
 		}
 	}
-	stopTrajectory(): void{
+	stopTrajectory(): void {
 		this.playingTrajectory = false;
 		this.trajectoryStep = 0;
 		this.position = this.oldPos;
 	}
 
-	stepTrajectoryForward(): void{
+	stepTrajectoryForward(): void {
 		if (this.trajectoryStep >= this.path.length - 1 || !this.playingTrajectory) {
 			return;
 		}
 		this.trajectoryStep++;
 		this.position = this.path[this.trajectoryStep];
 	}
-	stepTrajectoryBackward(): void{
+	stepTrajectoryBackward(): void {
 		if (this.trajectoryStep <= 0 || !this.playingTrajectory) {
 			return;
 		}

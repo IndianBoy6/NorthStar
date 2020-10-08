@@ -28,19 +28,45 @@ Alternatively, you can go to https://nikhilanayak.github.io/NorthStar where the 
 To convert your trajectory into java file, you'll need a `config.json` file. Use this example to create your own `config.json`
 ```json
 {
-    "imports": "import everything;",
-    "declarations": "Robot robot;",
-    "inits": "robot = new Robot(0,0);",
+    "imports": [
+        "import everything;"
+    ],
+    "declarations": [
+        "Robot robot;"
+    ],
+    "inits": [
+        "robot = new Robot(0,0);"
+    ],
     "blockingMovement":true,
-    "movementfunction":"robot.move($x, $y);"
+    "movementfunction":"robot.move($x, $y);",
+    "additionalfunctions":[
+        "int add(int a, int b){",
+        "   return a + b;",
+        "}"
+    ],
+    "additionalclasses": [
+        "public class Robot{",
+        "   public Robot(int initialPosX, int initialPosY){",
+        "         ",
+        "   }"
+        "   void move(int x, int y){",
+        "       ",
+        "   }",
+        "}"
+    ]
 }
 
 ```
-If you want to create your own `config.json` from scratch, this is what each JSON value means:
-- `Imports`: The imports are any libraries that need to be imported for the code to run properly. If you're not sure what needs to be imported, leave this blank and use your IDE to automatically import things later as needed
-- `Declarations`: This is everything that needs to be declared after the class declaration and before the runOpMode method
-- `Inits`: This is everything that needs to be initialized inside the runOpMode method but before waitForStart is called
-- `BlockingMovement`: If this is true, the main loop in unnecessary as all the movement code can be placed one after another. If blockingMovement is false, you will need to your movementfunction to return a boolean, signifying whether it has completed it's path or not. 
+With this config, the resulting java file will look like this:
+
+If you want to create your own `config.json` from scratch, this is what each JSON key means:
+- `Imports`(Array of Strings): The imports are any libraries that need to be imported for the code to run properly. If you're not sure what needs to be imported, leave this blank and use your IDE to automatically import things later as needed
+- `Declarations`(Array of String): This is everything that needs to be declared after the class declaration and before the runOpMode method
+- `Inits`(Array of Strings): This is everything that needs to be initialized inside the runOpMode method but before waitForStart is called
+- `BlockingMovement`(Boolean): If this is true, the main loop in unnecessary as all the movement code can be placed one after another. If blockingMovement is false, you will need to your movementfunction to return a boolean, signifying whether it has completed it's path or not. 
+- `MovementFunction`(String): This is the function that needs to be called for the robot to move to x, y. $x and $y will be replaced with the x and y values required to move to x,y. Make sure the function returns a boolean if blockingMovement is true.
+- `AdditionalFunctions`(Array of Strings): This includes any functions that need to be added inside the main class.
+- `AdditionalClasses`(Array of Strings): This includes any classes that need to be added.
 
 
 
@@ -53,4 +79,3 @@ If you want to create your own `config.json` from scratch, this is what each JSO
 - Set Config File - This is Used To Set The Config File
 - Playback Trajectory - This Is Used to step through your trajectory one point at a time
 - Export Trajectory - After a Config File is set, you can export your trajectory into code.
-<br/><br/><br/><br/>

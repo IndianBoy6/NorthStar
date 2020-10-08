@@ -8,7 +8,11 @@ class Robot {
         this.playingTrajectory = false;
         this.trajectoryStep = 0;
         this.oldPos = createVector(0, 0);
-        this.positionOffset = undefined;
+        this.positionOffset = createVector(0, 0);
+        this.offsetSet = false;
+    }
+    setPositionText(element) {
+        this.positionText = element;
     }
     setBlockSize(newBlockSize) {
         this.blockSize = newBlockSize;
@@ -54,11 +58,13 @@ class Robot {
             this.position.x = int(x);
             this.position.y = int(y);
             this.clipPos();
+            this.updateText();
         }
     }
     setPoint() {
-        if (this.positionOffset == undefined) {
+        if (!this.offsetSet) {
             this.positionOffset = createVector(this.position.x, this.position.y);
+            this.offsetSet = true;
         }
         let lastPoint = undefined;
         if (this.path.length > 0) {
@@ -70,6 +76,10 @@ class Robot {
         if (!(lastPoint.x == this.position.x && lastPoint.y == this.position.y)) {
             this.path.push(createVector(this.position.x, this.position.y));
         }
+        this.updateText();
+    }
+    updateText() {
+        this.positionText.innerText = (this.position.x - this.positionOffset.x) + ", " + (this.position.y - this.positionOffset.y);
     }
     renderTrajectory(trajectory) {
         for (let i = 0; i < trajectory.length - 1; i++) {
@@ -86,7 +96,7 @@ class Robot {
             return true;
         }
         else {
-            console.log("No path to playback. Try creating some points first");
+            showSnackbar("No path to play back. Try creating some points first.");
             return false;
         }
     }
@@ -113,12 +123,14 @@ class Robot {
 let blockSize;
 let robot;
 let loadFile;
+var positionText;
 function setup() {
     blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
+    positionText = document.getElementById("positionLabel");
+    document.body.appendChild(positionText);
     document.addEventListener("keydown", keypressed);
-    createCanvas(blockSize, blockSize);
-    document.body.appendChild(document.createElement("br"));
     robot = new Robot(blockSize);
+    robot.setPositionText(positionText);
     const setConfigButton = button("Set Config File", () => {
         loadFile = document.createElement("input");
         loadFile.type = "file";
@@ -147,13 +159,15 @@ function setup() {
             const fileReader = new FileReader();
             fileReader.onload = function (e) {
                 const code = exportToCode(JSON.parse(e.target.result.toString()), robot.path);
-                let fileName = prompt("What should the name of this file be?");
-                downloadCode(code.join("\n"), fileName);
+                if (code != undefined) {
+                    let fileName = prompt("What should the name of this file be?");
+                    downloadCode(code.join("\n"), fileName);
+                }
             };
             fileReader.readAsText(loadFile.files[0]);
         }
         else {
-            console.log("You haven't selected a config file. Press the \"Set Config File\" Button First.");
+            showSnackbar("You have not selected a config file.<br>Press \"\Set Config File\"");
         }
     });
     stepForwardPlayback.style.display = "none";
@@ -166,13 +180,17 @@ function setup() {
     playbackButton.style.width = (blockSize / 3).toString();
     exportButton.style.width = (blockSize / 3).toString();
     window.onresize = () => {
-        blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.9;
+        blockSize = Math.min(window.innerHeight, window.innerWidth) * 0.6;
         resizeCanvas(blockSize, blockSize);
         robot.setBlockSize(blockSize);
         setConfigButton.style.width = (blockSize / 3).toString();
         playbackButton.style.width = (blockSize / 3).toString();
         exportButton.style.width = (blockSize / 3).toString();
     };
+    document.getElementById("main").prepend(document.createElement("br"));
+    createCanvas(blockSize, blockSize);
+    document.getElementById("main").prepend(document.getElementById("defaultCanvas0"));
+    document.getElementById("main").prepend(document.getElementById("positionLabel"));
 }
 function draw() {
     background(200);
@@ -212,50 +230,62 @@ function button(html, onpress) {
     const button = document.createElement("button");
     button.innerHTML = html;
     button.addEventListener("click", onpress);
-    document.body.appendChild(button);
+    document.getElementById("main").prepend(button);
     return button;
 }
 function exportToCode(config, points) {
-    console.log(config);
+    if (robot.path.length == 0) {
+        showSnackbar("No path to export. Try creating some points first");
+        return;
+    }
     let valid = true;
     const imports = config["imports"];
     const declarations = config["declarations"];
     const initializations = config["inits"];
     const blockingMovement = config["blockingMovement"];
     const movementFunction = config["movementfunction"];
-    if (imports == undefined || typeof imports != "string") {
-        console.log("imports is missing or invalid");
+    const additionalFunctions = config["additionalfunctions"];
+    const additionalClasses = config["additionalclasses"];
+    if (imports == undefined || !Array.isArray(imports)) {
+        showSnackbar("Error: The imports section of your config is missing/invalid");
         valid = false;
     }
-    if (declarations == undefined || typeof declarations != "string") {
-        console.log("declarations is missing or invalid");
+    else if (declarations == undefined || !Array.isArray(declarations)) {
+        showSnackbar("Error: The declarations section of your config is missing/invalid");
         valid = false;
     }
-    if (initializations == undefined || typeof initializations != "string") {
-        console.log("initializations is missing or invalid");
+    else if (initializations == undefined || !Array.isArray(initializations)) {
+        showSnackbar("Error: The initializations section of your config is missing/invalid");
         valid = false;
     }
-    if (blockingMovement == undefined || typeof blockingMovement != typeof true) {
-        console.log("blockingMovement is missing or invalid");
+    else if (blockingMovement == undefined || typeof blockingMovement != typeof true) {
+        showSnackbar("Error: The blockingMovement section of your config is missing/invalid");
         valid = false;
     }
-    if (movementFunction == undefined || typeof movementFunction != "string" || !movementFunction.includes("$x") || !movementFunction.includes("$y")) {
-        console.log("movementFunction is missing or invalid");
+    else if (movementFunction == undefined || typeof movementFunction != "string") {
+        showSnackbar("Error: The movementFunction section of your config is missing/invalid");
+        valid = false;
+    }
+    else if (additionalFunctions == undefined || !Array.isArray(additionalFunctions)) {
+        showSnackbar("Error: The additionalFunctions section of your config is missing/invalid");
+        valid = false;
+    }
+    else if (additionalClasses == undefined || !Array.isArray(additionalClasses)) {
+        showSnackbar("Error: The additionalClasses section of your config is missing/invalid");
         valid = false;
     }
     if (!valid) {
-        console.log("invalid");
         return;
     }
     let code = [];
     code.push("package YOUR_PACKAGE;");
-    code = code.concat(imports.split("\n"));
+    code = code.concat(imports);
     code.push("@Autonomous");
     code.push("public class CLASSNAME extends LinearOpMode{");
     if (!blockingMovement) {
         let enumString = [];
         enumString.push("enum State{");
-        for (let i = 1; i < points.length; i++) {
+        for (let i = 0; i < points.length; i++) {
             let currentKey = "Point" + i;
             enumString.push(currentKey + ",");
         }
@@ -263,21 +293,21 @@ function exportToCode(config, points) {
         enumString.push("}");
         code = code.concat(enumString);
     }
-    code = code.concat(declarations.split("\n"));
+    code = code.concat(declarations);
     code.push("@Override");
     code.push("public void runOpMode(){");
     if (!blockingMovement) {
-        code.push("State currentState = State.Point0;");
+        code.push("State currentState = State.Point1;");
     }
-    code = code.concat(initializations.split("\n"));
+    code = code.concat(initializations);
     code.push("waitForStart();");
     if (blockingMovement) {
         for (const rawPoint of points.slice(1)) {
             const point = createVector(rawPoint.x - robot.positionOffset.x, rawPoint.y - robot.positionOffset.y);
-            let output = movementFunction + "";
-            output = output.split("$x").join(point.x.toString());
-            output = output.split("$y").join(point.y.toString());
-            code.push(output);
+            let evaluatedMovementFunction = movementFunction + "";
+            evaluatedMovementFunction = evaluatedMovementFunction.split("$x").join(point.x.toString());
+            evaluatedMovementFunction = evaluatedMovementFunction.split("$y").join(point.y.toString());
+            code.push(evaluatedMovementFunction + ";");
         }
     }
     else {
@@ -298,7 +328,6 @@ function exportToCode(config, points) {
             }
             else {
                 let nextIdx = i + 1;
-                console.log(nextIdx);
                 code.push("currentState = State.Point" + nextIdx + ";");
             }
             code.push("}");
@@ -308,7 +337,15 @@ function exportToCode(config, points) {
         code.push("}");
     }
     code.push("}");
+    code = code.concat(additionalFunctions);
     code.push("}");
+    code = code.concat(additionalClasses);
     return code;
+}
+function showSnackbar(text) {
+    let snackbar = document.getElementById("snackbar");
+    snackbar.className = "show";
+    snackbar.innerHTML = text;
+    setTimeout(() => { snackbar.className = ""; }, 6000);
 }
 //# sourceMappingURL=../src/src/build.js.map
