@@ -129,6 +129,7 @@ function keypressed(e: KeyboardEvent): void {
 	}
 
 	if (e.key == " ") {
+		e.preventDefault();
 		robot.setPoint();
 	}
 

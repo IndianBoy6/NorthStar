@@ -211,6 +211,7 @@ function keypressed(e) {
         robot.move(1, 0);
     }
     if (e.key == " ") {
+        e.preventDefault();
         robot.setPoint();
     }
     if (e.shiftKey) {
