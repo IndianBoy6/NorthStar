@@ -57,7 +57,7 @@ To convert your trajectory into java file, you'll need a `config.json` file. Use
 }
 
 ```
-With this config, the resulting java file will look like this:
+With this config, the resulting java file will look like [this](templates/blocking.java)
 
 If you want to create your own `config.json` from scratch, this is what each JSON key means:
 - `Imports`(Array of Strings): The imports are any libraries that need to be imported for the code to run properly. If you're not sure what needs to be imported, leave this blank and use your IDE to automatically import things later as needed
