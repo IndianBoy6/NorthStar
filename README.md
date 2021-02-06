@@ -22,7 +22,7 @@ As a programmer on my FTC team, I've realized FTC programming can be a lot of te
 ## Installation
 If you want to run this locally, clone this repository. To run, open index.html. The only files you will actually need are `index.html` and `build/build.js` so downloading those seperately will work. However, if you do so, you will not be able to recompile the typescript files.
 
-Alternatively, you can go to https://nikhilanayak.github.io/NorthStar where the latest code will be running.
+Alternatively, you can go to https://indianboy6.github.io/NorthStar where the latest code will be running.
 
 ## Configuration
 To convert your trajectory into java file, you'll need a `config.json` file. Use this example to create your own `config.json`
